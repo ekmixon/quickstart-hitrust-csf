@@ -16,31 +16,30 @@ def send(event, context, responseStatus, responseData, physicalResourceId, reaso
 
     print (responseUrl)
 
-    responseBody = {}
-    responseBody['Status'] = responseStatus
-    if reason:
-        responseBody['Reason'] = reason
-    else:
-        responseBody['Reason'] = 'See the details in CloudWatch Log Stream: ' + context.log_stream_name
-    responseBody['PhysicalResourceId'] = physicalResourceId or context.log_stream_name
-    responseBody['StackId'] = event['StackId']
-    responseBody['RequestId'] = event['RequestId']
-    responseBody['LogicalResourceId'] = event['LogicalResourceId']
-    responseBody['Data'] = responseData
+    responseBody = {
+        'Status': responseStatus,
+        'Reason': reason
+        or f'See the details in CloudWatch Log Stream: {context.log_stream_name}',
+        'PhysicalResourceId': physicalResourceId or context.log_stream_name,
+        'StackId': event['StackId'],
+        'RequestId': event['RequestId'],
+        'LogicalResourceId': event['LogicalResourceId'],
+        'Data': responseData,
+    }
 
     json_responseBody = json.dumps(responseBody)
-   
+
     print ("Response body:\n" + json_responseBody)
 
     headers = {
         'content-type' : '', 
         'content-length' : str(len(json_responseBody))
     }
-    
+
     try:
         response = requests.put(responseUrl,
                                 data=json_responseBody,
                                 headers=headers)
-        print ("Status code: " + response.reason)
+        print(f"Status code: {response.reason}")
     except Exception as e:
-        print ("send(..) failed executing requests.put(..): " + str(e))
+        print(f"send(..) failed executing requests.put(..): {str(e)}")
